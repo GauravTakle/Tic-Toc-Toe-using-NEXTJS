@@ -1,95 +1,120 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client';
+import Head from "next/head";
+import { useEffect, useState } from "react";
 
+const WINNING_COMBO = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 export default function Home() {
+  const [xTurn, setXTurn] = useState(true);
+  const [won, setWon] = useState(false);
+  const [wonCombo, setWonCombo] = useState([]);
+  const [boardData, setBoardData] = useState({
+    0: "",
+    1: "",
+    2: "",
+    3: "",
+    4: "",
+    5: "",
+    6: "",
+    7: "",
+    8: "",
+  });
+  const [isDraw, setIsDraw] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  useEffect(() => {
+    checkWinner();
+    checkDraw();
+  }, [boardData]);
+  const updateBoardData = (idx) => {
+    if (!boardData[idx] && !won) {
+      //will check whether specify idx is empty or not
+      let value = xTurn === true ? "X" : "O";
+      setBoardData({ ...boardData, [idx]: value });
+      setXTurn(!xTurn);
+    }
+  };
+  const checkDraw = () => {
+    let check = Object.keys(boardData).every((v) => boardData[v]);
+    setIsDraw(check);
+    if (check) setModalTitle("Match Draw!!!");
+  };
+  const checkWinner = () => {
+    WINNING_COMBO.map((bd) => {
+      const [a, b, c] = bd;
+      if (
+        boardData[a] &&
+        boardData[a] === boardData[b] &&
+        boardData[a] === boardData[c]
+      ) {
+        setWon(true);
+        setWonCombo([a, b, c]);
+        setModalTitle(`Player ${!xTurn ? "X" : "O"} Won!!!`);
+
+        return;
+      }
+    });
+  };
+
+  const reset = () => {
+    setBoardData({
+      0: "",
+      1: "",
+      2: "",
+      3: "",
+      4: "",
+      5: "",
+      6: "",
+      7: "",
+      8: "",
+    });
+    setXTurn(true);
+    setWon(false);
+    setWonCombo([]);
+    setIsDraw(false);
+    setModalTitle("");
+  };
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div>
+      <Head>
+        <title>Tic Tac Toe</title>
+      </Head>
+      <h1>Tic Tac Toe</h1>
+      <div className="game">
+        <div className="game__menu">
+          <p>{xTurn === true ? "X Turn" : "O Turn"}</p>
+          <p>{`Game Won:${won} Draw: ${isDraw}`}</p>
+        </div>
+        <div className="game__board">
+          {[...Array(9)].map((v, idx) => {
+            return (
+              <div
+                onClick={() => {
+                  updateBoardData(idx);
+                }}
+                key={idx}
+                className={`square ${
+                  wonCombo.includes(idx) ? "highlight" : ""
+                }`}
+              >
+                {boardData[idx]}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className={`modal ${modalTitle ? "show" : ""}`}>
+        <div className="modal__title">{modalTitle}</div>
+        <button onClick={reset}>New Game</button>
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </div>
+  );
 }
